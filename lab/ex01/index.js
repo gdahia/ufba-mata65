@@ -9,12 +9,34 @@ function init() {
   var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
   scene.add(camera);
 
-  var verticesPerRow = 50;
-  var verticesPerCol = 50;
-  var dropletGeometry = getDropletVertices(verticesPerRow, verticesPerCol);
-  dropletGeometry =
-      getDropletFaces(dropletGeometry, verticesPerRow, verticesPerCol);
+  // add dat.gui slider
+  var Controls = function() {
+    // resolution attributes
+    this.verticesPerRow = 50;
+    this.verticesPerCol = 50;
 
+    // coloring attribute
+    this.colorMode = 'fixed';
+  };
+  var controls = new Controls();
+  var gui = new dat.GUI();
+
+  // add color mode selector
+  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericBased']);
+
+  // add resolution sliders
+  var resControls = gui.addFolder('Resolution');
+  resControls.add(controls, 'verticesPerRow', 20, 100);
+  resControls.add(controls, 'verticesPerCol', 20, 100);
+  resControls.open();
+
+  // get droplet geometry
+  var dropletGeometry =
+      getDropletVertices(controls.verticesPerRow, controls.verticesPerCol);
+  dropletGeometry = getDropletFaces(
+      dropletGeometry, controls.verticesPerRow, controls.verticesPerCol);
+
+  // droplet material
   var dropletMaterial = new THREE.MeshBasicMaterial({
     vertexColors: THREE.VertexColors,
     wireframe: true,
@@ -24,6 +46,7 @@ function init() {
   var dropletMesh = new THREE.Mesh(dropletGeometry, dropletMaterial);
   scene.add(dropletMesh);
 
+  // animation
   var animate = function() {
     requestAnimationFrame(animate);
 
