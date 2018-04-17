@@ -65,7 +65,7 @@ function getDropletVertices(verticesPerRow, verticesPerColumn) {
   var dropletGeometry = new THREE.Geometry();
 
   for (theta = 0; theta <= Math.PI; theta += Math.PI / verticesPerColumn)
-    for (omega = 0; omega <= 2 * Math.PI; omega += 2 * Math.PI / verticesPerRow)
+    for (omega = 0; omega < 2 * Math.PI; omega += 2 * Math.PI / verticesPerRow)
       dropletGeometry.vertices.push(
           new THREE.Vector3(
               0.5 * (1 - Math.cos(theta)) * Math.sin(theta) * Math.cos(omega),
@@ -78,7 +78,7 @@ function getDropletVertices(verticesPerRow, verticesPerColumn) {
 function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
   for (i = 0; i < dropletGeometry.vertices.length - verticesPerRow; i++) {
     row = parseInt(i / verticesPerRow);
-    col = i % verticesPerRow;
+    col = parseInt(i % verticesPerRow);
     right_neighbor_index = row * verticesPerRow + ((col + 1) % verticesPerRow);
     down_neighbor_index = (row + 1) * verticesPerRow + col;
     down_left_neighbor_index = (row + 1) * verticesPerRow +
