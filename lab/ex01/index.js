@@ -24,24 +24,25 @@ function init() {
   var dropletMesh = new THREE.Mesh(dropletGeometry, dropletMaterial);
   scene.add(dropletMesh);
 
-  // var animate = function() {
-  // requestAnimationFrame(animate);
+  var animate = function() {
+    requestAnimationFrame(animate);
 
-  // dropletMesh.rotation.x += 0.01;
-  // dropletMesh.rotation.y += 0.01;
+    dropletMesh.rotation.x += 0.01;
+    dropletMesh.rotation.y += 0.01;
 
+    renderer.render(scene, camera);
+  };
+
+  animate();
+  // dropletMesh.rotation.set(-Math.PI * 0.5, 0, 0);
   // renderer.render(scene, camera);
-  //};
-
-  // animate();
-  renderer.render(scene, camera);
 }
 
 function getDropletVertices(verticesPerRow, verticesPerColumn) {
   var dropletGeometry = new THREE.Geometry();
 
-  for (omega = 0; omega <= 2 * Math.PI; omega += 2 * Math.PI / verticesPerRow)
-    for (theta = 0; theta <= Math.PI; theta += Math.PI / verticesPerColumn)
+  for (theta = 0; theta <= Math.PI; theta += Math.PI / verticesPerColumn)
+    for (omega = 0; omega <= 2 * Math.PI; omega += 2 * Math.PI / verticesPerRow)
       dropletGeometry.vertices.push(
           new THREE.Vector3(
               0.5 * (1 - Math.cos(theta)) * Math.sin(theta) * Math.cos(omega),
@@ -52,8 +53,18 @@ function getDropletVertices(verticesPerRow, verticesPerColumn) {
 }
 
 function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
-  for (i = 0; i < dropletGeometry.vertices.length - verticesPerRow - 1; i++)
-    dropletGeometry.faces.push(new THREE.Face3(i, i + 1, i + verticesPerRow));
+  for (i = 0; i < dropletGeometry.vertices.length - verticesPerRow; i++) {
+    row = parseInt(i / verticesPerRow);
+    col = i % verticesPerRow;
+    right_neighbor_index = row * verticesPerRow + ((col + 1) % verticesPerRow);
+    down_neighbor_index = (row + 1) * verticesPerRow + col;
+    down_left_neighbor_index = (row + 1) * verticesPerRow +
+        (col + verticesPerRow - 1) % verticesPerRow;
+    dropletGeometry.faces.push(
+        new THREE.Face3(i, right_neighbor_index, down_neighbor_index));
+    dropletGeometry.faces.push(
+        new THREE.Face3(i, down_left_neighbor_index, down_neighbor_index));
+  }
 
   return dropletGeometry;
 }
