@@ -35,6 +35,7 @@ function init() {
       getDropletVertices(controls.verticesPerRow, controls.verticesPerCol);
   dropletGeometry = getDropletFaces(
       dropletGeometry, controls.verticesPerRow, controls.verticesPerCol);
+  dropletGeometry = colorDropletFaces(dropletGeometry, controls.colorMode);
 
   // droplet material
   var dropletMaterial = new THREE.MeshBasicMaterial({
@@ -88,6 +89,38 @@ function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
     dropletGeometry.faces.push(
         new THREE.Face3(i, down_left_neighbor_index, down_neighbor_index));
   }
+
+  return dropletGeometry;
+}
+
+function colorDropletFaces(dropletGeometry, colorMode) {
+  if (colorMode == 'fixed')
+    dropletGeometry.faces.forEach(function(face) {
+      face.color.setRGB(0.3, 0.3, 0.8);
+    });
+  else if (colorMode == 'cartesianBased') {
+    // euclidean coordinates ranges
+    var maxX = 0.6492353213974356;
+    var minX = -0.6492353213974356;
+    var maxY = 0.64795420379436;
+    var minY = -0.64795420379436;
+    var maxZ = 1;
+    var minZ = -1;
+
+    // color based on ranges
+    dropletGeometry.faces.forEach(function(face) {
+      var vs = [
+        dropletGeometry.vertices[face.a],
+        dropletGeometry.vertices[face.b],
+        dropletGeometry.vertices[face.c],
+      ];
+      for (i = 0; i < 3; i++)
+        face.vertexColors[i] = new THREE.Color(
+            (vs[i].x - minX) / (maxX - minX), (vs[i].y - minY) / (maxY - minY),
+            (vs[i].z - minZ) / maxZ);
+    });
+  }
+
 
   return dropletGeometry;
 }
