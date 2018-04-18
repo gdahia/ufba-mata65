@@ -82,12 +82,17 @@ function getDropletVertices(verticesPerRow, verticesPerColumn) {
 
 function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
   for (i = 0; i < dropletGeometry.vertices.length - verticesPerRow; i++) {
+    // retrieve row and column of index
     row = parseInt(i / verticesPerRow);
     col = parseInt(i % verticesPerRow);
+
+    // compute neighbors' index
     right_neighbor_index = row * verticesPerRow + ((col + 1) % verticesPerRow);
     down_neighbor_index = (row + 1) * verticesPerRow + col;
     down_left_neighbor_index = (row + 1) * verticesPerRow +
         (col + verticesPerRow - 1) % verticesPerRow;
+
+    // draw faces
     dropletGeometry.faces.push(
         new THREE.Face3(i, right_neighbor_index, down_neighbor_index));
     dropletGeometry.faces.push(
