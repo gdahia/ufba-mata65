@@ -65,13 +65,17 @@ function init() {
 function getDropletVertices(verticesPerRow, verticesPerColumn) {
   var dropletGeometry = new THREE.Geometry();
 
-  for (theta = 0; theta <= Math.PI; theta += Math.PI / verticesPerColumn)
-    for (omega = 0; omega < 2 * Math.PI; omega += 2 * Math.PI / verticesPerRow)
+  for (i = 0; i <= verticesPerColumn; i++) {
+    var theta = i * Math.PI / verticesPerColumn;
+    for (j = 0; j < verticesPerRow; j++) {
+      var omega = j * 2 * Math.PI / verticesPerRow;
       dropletGeometry.vertices.push(
           new THREE.Vector3(
               0.5 * (1 - Math.cos(theta)) * Math.sin(theta) * Math.cos(omega),
               0.5 * (1 - Math.cos(theta)) * Math.sin(theta) * Math.sin(omega),
               Math.cos(theta)));
+    }
+  }
 
   return dropletGeometry;
 }
