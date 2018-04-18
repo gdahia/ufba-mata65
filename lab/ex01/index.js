@@ -22,7 +22,7 @@ function init() {
   var gui = new dat.GUI();
 
   // add color mode selector
-  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericBased']);
+  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericalBased']);
 
   // add resolution sliders
   var resControls = gui.addFolder('Resolution');
@@ -118,6 +118,26 @@ function colorDropletFaces(dropletGeometry, colorMode) {
         face.vertexColors[i] = new THREE.Color(
             (vs[i].x - minX) / (maxX - minX), (vs[i].y - minY) / (maxY - minY),
             (vs[i].z - minZ) / maxZ);
+    });
+  } else {
+    // color based on spherical coordinates
+    dropletGeometry.faces.forEach(function(face) {
+      var vs = [
+        dropletGeometry.vertices[face.a],
+        dropletGeometry.vertices[face.b],
+        dropletGeometry.vertices[face.c],
+      ];
+      for (i = 0; i < 3; i++) {
+        // radius = 1;
+        // theta = Math.acos(vs[i].z);
+        // omega = Math.acos(2 * vs[i].y / ((1 - vs[i].z) * Math.sin(theta)));
+        radius = Math.sqrt(
+            vs[i].x * vs[i].x + vs[i].y * vs[i].y + vs[i].z * vs[i].z);
+        theta = Math.acos(vs[i].z / radius);
+        omega = Math.atan2(vs[i].y, vs[i].x);
+        face.vertexColors[i] = new THREE.Color().setHSL(
+            omega / (2 * Math.PI), radius, theta / Math.PI);
+      }
     });
   }
 
