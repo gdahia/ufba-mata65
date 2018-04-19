@@ -31,11 +31,14 @@ function init() {
   resControls.open();
 
   // get droplet geometry
-  var dropletGeometry =
-      getDropletVertices(controls.verticesPerRow, controls.verticesPerCol);
+  var dropletGeometry = getDropletVertices(
+      parseInt(controls.verticesPerRow), parseInt(controls.verticesPerCol));
   dropletGeometry = getDropletFaces(
-      dropletGeometry, controls.verticesPerRow, controls.verticesPerCol);
-  dropletGeometry = colorDropletFaces(dropletGeometry, controls.colorMode);
+      dropletGeometry, parseInt(controls.verticesPerRow),
+      parseInt(controls.verticesPerCol));
+  dropletGeometry = colorDropletFaces(
+      dropletGeometry, controls.colorMode, parseInt(controls.verticesPerRow),
+      parseInt(controls.verticesPerCol));
 
   // droplet material
   var dropletMaterial = new THREE.MeshBasicMaterial({
@@ -102,7 +105,8 @@ function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
   return dropletGeometry;
 }
 
-function colorDropletFaces(dropletGeometry, colorMode) {
+function colorDropletFaces(
+    dropletGeometry, colorMode, verticesPerRow, verticesPerColumn) {
   if (colorMode == 'fixed')
     dropletGeometry.faces.forEach(function(face) {
       face.color.setRGB(0.3, 0.3, 0.8);
@@ -129,23 +133,18 @@ function colorDropletFaces(dropletGeometry, colorMode) {
             (vs[i].z - minZ) / maxZ);
     });
   } else {
+    // compute correct colors for vertices
+    for (i = 0; i <= verticesPerColumn; i++)
+      for (j = 0; j < verticesPerRow; j++)
+        dropletGeometry.colors.push(
+            new THREE.Color().setHSL(
+                j / verticesPerRow, 1, i / verticesPerColumn));
+
     // color based on spherical coordinates
     dropletGeometry.faces.forEach(function(face) {
-      var vs = [
-        dropletGeometry.vertices[face.a],
-        dropletGeometry.vertices[face.b],
-        dropletGeometry.vertices[face.c],
-      ];
+      var vs = [face.a, face.b, face.c];
       for (i = 0; i < 3; i++) {
-        // radius = 1;
-        // theta = Math.acos(vs[i].z);
-        // omega = Math.acos(2 * vs[i].y / ((1 - vs[i].z) * Math.sin(theta)));
-        radius = Math.sqrt(
-            vs[i].x * vs[i].x + vs[i].y * vs[i].y + vs[i].z * vs[i].z);
-        theta = Math.acos(vs[i].z / radius);
-        omega = Math.atan2(vs[i].y, vs[i].x);
-        face.vertexColors[i] = new THREE.Color().setHSL(
-            omega / (2 * Math.PI), radius, theta / Math.PI);
+        face.vertexColors[i] = dropletGeometry.colors[vs[i]];
       }
     });
   }
