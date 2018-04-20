@@ -9,36 +9,11 @@ function init() {
   var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
   scene.add(camera);
 
-  // add dat.gui slider
-  var Controls = function() {
-    // resolution attributes
-    this.verticesPerRow = 50;
-    this.verticesPerCol = 50;
-
-    // coloring attribute
-    this.colorMode = 'fixed';
-  };
-  var controls = new Controls();
-  var gui = new dat.GUI();
-
-  // add color mode selector
-  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericalBased']);
-
-  // add resolution sliders
-  var resControls = gui.addFolder('Resolution');
-  resControls.add(controls, 'verticesPerRow', 20, 100);
-  resControls.add(controls, 'verticesPerCol', 20, 100);
-  resControls.open();
-
   // get droplet geometry
-  var dropletGeometry = getDropletVertices(
-      parseInt(controls.verticesPerRow), parseInt(controls.verticesPerCol));
-  dropletGeometry = getDropletFaces(
-      dropletGeometry, parseInt(controls.verticesPerRow),
-      parseInt(controls.verticesPerCol));
-  dropletGeometry = colorDropletFaces(
-      dropletGeometry, controls.colorMode, parseInt(controls.verticesPerRow),
-      parseInt(controls.verticesPerCol));
+  var dropletGeometry = getDropletVertices(50);
+  dropletGeometry = getDropletFaces(dropletGeometry, 50);
+  dropletGeometry =
+      colorDropletFaces(dropletGeometry, 'fixed', [77, 77, 204], 50);
 
   // droplet material
   var dropletMaterial = new THREE.MeshBasicMaterial({
@@ -47,31 +22,68 @@ function init() {
     side: THREE.DoubleSide
   });
 
+  // create mesh
   var dropletMesh = new THREE.Mesh(dropletGeometry, dropletMaterial);
   scene.add(dropletMesh);
+
+  // add dat.gui slider
+  var Controls = function() {
+    // resolution attributes
+    this.vertices = 50;
+
+    // coloring attributes
+    this.colorMode = 'fixed';
+    this.fixedColor = [77, 77, 204];
+
+    // stop rotation attribute
+    this.freezeRotation = false;
+  };
+  var controls = new Controls();
+  var gui = new dat.GUI();
+
+  var updateFunction = function() {
+    // get new droplet geometry
+    dropletGeometry = getDropletVertices(parseInt(controls.vertices));
+    dropletGeometry =
+        getDropletFaces(dropletGeometry, parseInt(controls.vertices));
+    dropletGeometry = colorDropletFaces(
+        dropletGeometry, controls.colorMode, controls.fixedColor,
+        parseInt(controls.vertices));
+
+    dropletMesh.geometry = dropletGeometry;
+  };
+
+  // add color mode selector
+  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericalBased'])
+      .onFinishChange(updateFunction);
+
+  // add color mode selector
+  gui.addColor(controls, 'fixedColor').onFinishChange(updateFunction);
+
+  // add vertices resolution sliders
+  gui.add(controls, 'vertices', 5, 100).onFinishChange(updateFunction);
+
+  // add freeze rotation checkbox
+  gui.add(controls, 'freezeRotation');
 
   // animation
   var animate = function() {
     requestAnimationFrame(animate);
 
-    dropletMesh.rotation.x += 0.01;
-    dropletMesh.rotation.y += 0.01;
+    if (!controls.freezeRotation) dropletMesh.rotation.y += 0.01;
 
     renderer.render(scene, camera);
   };
-
   animate();
-  // dropletMesh.rotation.set(-Math.PI * 0.5, 0, 0);
-  // renderer.render(scene, camera);
 }
 
-function getDropletVertices(verticesPerRow, verticesPerColumn) {
+function getDropletVertices(vertices) {
   var dropletGeometry = new THREE.Geometry();
 
-  for (i = 0; i <= verticesPerColumn; i++) {
-    var theta = i * Math.PI / verticesPerColumn;
-    for (j = 0; j < verticesPerRow; j++) {
-      var omega = j * 2 * Math.PI / verticesPerRow;
+  for (i = 0; i <= vertices; i++) {
+    var theta = i * Math.PI / vertices;
+    for (j = 0; j < vertices; j++) {
+      var omega = j * 2 * Math.PI / vertices;
       dropletGeometry.vertices.push(
           new THREE.Vector3(
               0.5 * (1 - Math.cos(theta)) * Math.sin(theta) * Math.cos(omega),
@@ -83,17 +95,17 @@ function getDropletVertices(verticesPerRow, verticesPerColumn) {
   return dropletGeometry;
 }
 
-function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
-  for (i = 0; i < dropletGeometry.vertices.length - verticesPerRow; i++) {
+function getDropletFaces(dropletGeometry, vertices) {
+  for (i = 0; i < dropletGeometry.vertices.length - vertices; i++) {
     // retrieve row and column of index
-    row = parseInt(i / verticesPerRow);
-    col = parseInt(i % verticesPerRow);
+    row = parseInt(i / vertices);
+    col = parseInt(i % vertices);
 
     // compute neighbors' index
-    right_neighbor_index = row * verticesPerRow + ((col + 1) % verticesPerRow);
-    down_neighbor_index = (row + 1) * verticesPerRow + col;
-    down_left_neighbor_index = (row + 1) * verticesPerRow +
-        (col + verticesPerRow - 1) % verticesPerRow;
+    right_neighbor_index = row * vertices + ((col + 1) % vertices);
+    down_neighbor_index = (row + 1) * vertices + col;
+    down_left_neighbor_index =
+        (row + 1) * vertices + (col + vertices - 1) % vertices;
 
     // draw faces
     dropletGeometry.faces.push(
@@ -105,11 +117,11 @@ function getDropletFaces(dropletGeometry, verticesPerRow, verticesPerColumn) {
   return dropletGeometry;
 }
 
-function colorDropletFaces(
-    dropletGeometry, colorMode, verticesPerRow, verticesPerColumn) {
+function colorDropletFaces(dropletGeometry, colorMode, fixedColor, vertices) {
   if (colorMode == 'fixed')
     dropletGeometry.faces.forEach(function(face) {
-      face.color.setRGB(0.3, 0.3, 0.8);
+      face.color.setRGB(
+          fixedColor[0] / 255, fixedColor[1] / 255, fixedColor[2] / 255);
     });
   else if (colorMode == 'cartesianBased') {
     // euclidean coordinates ranges
@@ -133,12 +145,12 @@ function colorDropletFaces(
             (vs[i].z - minZ) / maxZ);
     });
   } else {
-    // compute correct colors for vertices
-    for (i = 0; i <= verticesPerColumn; i++)
-      for (j = 0; j < verticesPerRow; j++)
+    // compute appropiate spherical based colors
+    // for vertices omitting dependency on angles
+    for (i = 0; i <= vertices; i++)
+      for (j = 0; j < vertices; j++)
         dropletGeometry.colors.push(
-            new THREE.Color().setHSL(
-                j / verticesPerRow, 1, i / verticesPerColumn));
+            new THREE.Color().setHSL(j / vertices, 1, i / vertices));
 
     // color based on spherical coordinates
     dropletGeometry.faces.forEach(function(face) {
