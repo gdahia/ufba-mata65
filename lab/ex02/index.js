@@ -38,9 +38,10 @@ function init() {
     // stop rotation attribute
     this.freezeRotation = false;
 
-    // taper
-    this.taperVal = 0;
-    this.taperDirection = 'y';
+    // transformation properties
+    this.transf = 'taper';
+    this.transfVal = 0;
+    this.transfDirection = 'y';
   };
   var controls = new Controls();
   var gui = new dat.GUI();
@@ -54,8 +55,14 @@ function init() {
         dropletGeometry, controls.colorMode, controls.fixedColor,
         parseInt(controls.vertices));
 
-    applyTaper(
-        dropletGeometry.vertices, controls.taperDirection, controls.taperVal);
+    if (controls.transf == 'taper')
+      applyTaper(
+          dropletGeometry.vertices, controls.transfDirection,
+          controls.transfVal);
+    else if (controls.transf == 'twist')
+      applyTwist(
+          dropletGeometry.vertices, controls.transfDirection,
+          controls.transfVal);
     dropletMesh.geometry = dropletGeometry;
   };
 
@@ -72,9 +79,11 @@ function init() {
   // add freeze rotation checkbox
   gui.add(controls, 'freezeRotation');
 
-  // add taper controls
-  gui.add(controls, 'taperVal', 0, 1, 0.1).onFinishChange(updateFunction);
-  gui.add(controls, 'taperDirection', ['x', 'y', 'z'])
+  // add transformation controls
+  gui.add(controls, 'transf', ['taper', 'twist', 'shear'])
+      .onFinishChange(updateFunction);
+  gui.add(controls, 'transfVal', 0, 1, 0.1).onFinishChange(updateFunction);
+  gui.add(controls, 'transfDirection', ['x', 'y', 'z'])
       .onFinishChange(updateFunction);
 
   // animation
@@ -205,6 +214,43 @@ function applyTaper(vertices, direction, val) {
       mat.set(
           1, 0, 0, 0, 0, 1 + val * (v.x - minX) / (maxX - minX), 0, 0, 0, 0,
           1 + val * (v.x - minX) / (maxX - minX), 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  }
+}
+
+function applyTwist(vertices, direction, val) {
+  const maxX = 0.6492353213974356;
+  const minX = -0.6492353213974356;
+  const maxY = 0.64795420379436;
+  const minY = -0.64795420379436;
+  const maxZ = 1;
+  const minZ = -1;
+  if (direction == 'z') {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      const angle = val * (v.z - minZ) / (maxZ - minZ);
+      mat.set(
+          Math.cos(angle), -Math.sin(angle), 0, 0, Math.sin(angle),
+          Math.cos(angle), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  } else if (direction == 'y') {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      const angle = val * (v.y - minY) / (maxY - minY);
+      mat.set(
+          Math.cos(angle), 0, -Math.sin(angle), 0, 0, 1, 0, 0, Math.sin(angle),
+          0, Math.cos(angle), 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  } else {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      const angle = val * (v.x - minX) / (maxX - minX);
+      mat.set(
+          1, 0, 0, 0, 0, Math.cos(angle), -Math.sin(angle), 0, 0,
+          Math.sin(angle), Math.cos(angle), 0, 0, 0, 0, 1);
       v.applyMatrix4(mat);
     });
   }
