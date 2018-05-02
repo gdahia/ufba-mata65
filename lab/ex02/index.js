@@ -63,6 +63,10 @@ function init() {
       applyTwist(
           dropletGeometry.vertices, controls.transfDirection,
           controls.transfVal);
+    else
+      applyShear(
+          dropletGeometry.vertices, controls.transfDirection,
+          controls.transfVal);
     dropletMesh.geometry = dropletGeometry;
   };
 
@@ -251,6 +255,28 @@ function applyTwist(vertices, direction, val) {
       mat.set(
           1, 0, 0, 0, 0, Math.cos(angle), -Math.sin(angle), 0, 0,
           Math.sin(angle), Math.cos(angle), 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  }
+}
+
+function applyShear(vertices, direction, val) {
+  if (direction == 'z') {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      mat.set(1, 0, val, 0, 0, 1, val, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  } else if (direction == 'y') {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      mat.set(1, val, 0, 0, 0, 1, 0, 0, 0, val, 1, 0, 0, 0, 0, 1);
+      v.applyMatrix4(mat);
+    });
+  } else {
+    vertices.forEach(function(v) {
+      let mat = new THREE.Matrix4();
+      mat.set(1, 0, 0, 0, val, 1, 0, 0, val, 0, 1, 0, 0, 0, 0, 1);
       v.applyMatrix4(mat);
     });
   }
