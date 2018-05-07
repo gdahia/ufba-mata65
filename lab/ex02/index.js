@@ -233,7 +233,7 @@ function applyTwist(vertices, direction, val) {
   if (direction == 'z') {
     vertices.forEach(function(v) {
       let mat = new THREE.Matrix4();
-      const angle = val * (v.z - minZ) / (maxZ - minZ);
+      const angle = 2 * Math.PI * val * (v.z - minZ) / (maxZ - minZ);
       mat.set(
           Math.cos(angle), -Math.sin(angle), 0, 0, Math.sin(angle),
           Math.cos(angle), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
@@ -242,7 +242,7 @@ function applyTwist(vertices, direction, val) {
   } else if (direction == 'y') {
     vertices.forEach(function(v) {
       let mat = new THREE.Matrix4();
-      const angle = val * (v.y - minY) / (maxY - minY);
+      const angle = 2 * Math.PI * val * (v.y - minY) / (maxY - minY);
       mat.set(
           Math.cos(angle), 0, -Math.sin(angle), 0, 0, 1, 0, 0, Math.sin(angle),
           0, Math.cos(angle), 0, 0, 0, 0, 1);
@@ -251,7 +251,7 @@ function applyTwist(vertices, direction, val) {
   } else {
     vertices.forEach(function(v) {
       let mat = new THREE.Matrix4();
-      const angle = val * (v.x - minX) / (maxX - minX);
+      const angle = 2 * Math.PI * val * (v.x - minX) / (maxX - minX);
       mat.set(
           1, 0, 0, 0, 0, Math.cos(angle), -Math.sin(angle), 0, 0,
           Math.sin(angle), Math.cos(angle), 0, 0, 0, 0, 1);
