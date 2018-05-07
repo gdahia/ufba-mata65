@@ -6,33 +6,50 @@ function init() {
   renderer.setSize(500, 500);
   document.getElementById("WebGL-output").appendChild(renderer.domElement);
 
-  var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+  var camera = new THREE.OrthographicCamera(-2, 2, 2, -2, -2, 2);
   scene.add(camera);
 
+  // preload bunny and bulbasour meshes
+  var loader = new THREE.OBJLoader();
+  var bunnyGeometry;
+  var bulbasourGeometry;
+  loader.load('bunny.obj', function(loadedMesh) {
+    bunnyGeometry = new THREE.Geometry().fromBufferGeometry(
+        loadedMesh.children[0].geometry);
+    bunnyGeometry = normalizeGeometry(bunnyGeometry);
+  });
+  loader.load('bulbasour.obj', function(loadedMesh) {
+    bulbasourGeometry = new THREE.Geometry().fromBufferGeometry(
+        loadedMesh.children[1].geometry);
+    bulbasourGeometry = normalizeGeometry(bulbasourGeometry);
+  });
+
   // get droplet geometry
-  var dropletGeometry = getDropletVertices(50);
-  dropletGeometry = getDropletFaces(dropletGeometry, 50);
-  dropletGeometry =
-      colorDropletFaces(dropletGeometry, 'sphericalBased', [77, 77, 204], 50);
+  var geometry = getDropletVertices(50);
+  geometry = getDropletFaces(geometry, 50);
+  geometry = colorDropletFaces(geometry, 'sphericalBased', [77, 77, 204], 50);
 
   // droplet material
-  var dropletMaterial = new THREE.MeshBasicMaterial({
+  var material = new THREE.MeshBasicMaterial({
     vertexColors: THREE.VertexColors,
     wireframe: true,
     side: THREE.DoubleSide
   });
 
   // create mesh
-  var dropletMesh = new THREE.Mesh(dropletGeometry, dropletMaterial);
-  scene.add(dropletMesh);
+  var mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
 
   // add dat.gui slider
   var Controls = function() {
+    // select obj to load
+    this.source = 'droplet';
+
     // resolution attributes
     this.vertices = 50;
 
     // coloring attributes
-    this.colorMode = 'sphericalBased';
+    this.dropletColorMode = 'sphericalBased';
     this.fixedColor = [77, 77, 204];
 
     // stop rotation attribute
@@ -47,31 +64,52 @@ function init() {
   var gui = new dat.GUI();
 
   var updateFunction = function() {
-    // get new droplet geometry
-    dropletGeometry = getDropletVertices(parseInt(controls.vertices));
-    dropletGeometry =
-        getDropletFaces(dropletGeometry, parseInt(controls.vertices));
-    dropletGeometry = colorDropletFaces(
-        dropletGeometry, controls.colorMode, controls.fixedColor,
-        parseInt(controls.vertices));
+    // control source
+    if (controls.source == 'droplet') {
+      // get new droplet geometry
+      geometry = getDropletVertices(parseInt(controls.vertices));
+      geometry = getDropletFaces(geometry, parseInt(controls.vertices));
+      geometry = colorDropletFaces(
+          geometry, controls.dropletColorMode, controls.fixedColor,
+          parseInt(controls.vertices));
+    } else if (controls.source == 'bunny') {
+      geometry = bunnyGeometry.clone();
+      geometry.faces.forEach(function(face) {
+        face.color.setRGB(
+            controls.fixedColor[0] / 255, controls.fixedColor[1] / 255,
+            controls.fixedColor[2] / 255);
+      });
+    } else {
+      geometry = bulbasourGeometry.clone();
+      geometry.faces.forEach(function(face) {
+        face.color.setRGB(
+            controls.fixedColor[0] / 255, controls.fixedColor[1] / 255,
+            controls.fixedColor[2] / 255);
+      });
+    }
 
+    // control transformation
     if (controls.transf == 'taper')
       applyTaper(
-          dropletGeometry.vertices, controls.transfDirection,
-          controls.transfVal);
+          geometry.vertices, controls.transfDirection, controls.transfVal);
     else if (controls.transf == 'twist')
       applyTwist(
-          dropletGeometry.vertices, controls.transfDirection,
-          controls.transfVal);
+          geometry.vertices, controls.transfDirection, controls.transfVal);
     else
       applyShear(
-          dropletGeometry.vertices, controls.transfDirection,
-          controls.transfVal);
-    dropletMesh.geometry = dropletGeometry;
+          geometry.vertices, controls.transfDirection, controls.transfVal);
+
+    mesh.geometry = geometry;
   };
 
+  // add mesh selection
+  gui.add(controls, 'source', ['droplet', 'bunny', 'bulbasour'])
+      .onFinishChange(updateFunction);
+
   // add color mode selector
-  gui.add(controls, 'colorMode', ['fixed', 'cartesianBased', 'sphericalBased'])
+  gui.add(
+         controls, 'dropletColorMode',
+         ['fixed', 'cartesianBased', 'sphericalBased'])
       .onFinishChange(updateFunction);
 
   // add color mode selector
@@ -94,7 +132,7 @@ function init() {
   var animate = function() {
     requestAnimationFrame(animate);
 
-    if (!controls.freezeRotation) dropletMesh.rotation.y += 0.01;
+    if (!controls.freezeRotation) mesh.rotation.y += 0.01;
 
     renderer.render(scene, camera);
   };
@@ -190,10 +228,10 @@ function colorDropletFaces(dropletGeometry, colorMode, fixedColor, vertices) {
 }
 
 function applyTaper(vertices, direction, val) {
-  const maxX = 0.6492353213974356;
-  const minX = -0.6492353213974356;
-  const maxY = 0.64795420379436;
-  const minY = -0.64795420379436;
+  const maxX = 1;
+  const minX = -1;
+  const maxY = 1;
+  const minY = -1;
   const maxZ = 1;
   const minZ = -1;
   if (direction == 'z') {
@@ -224,10 +262,10 @@ function applyTaper(vertices, direction, val) {
 }
 
 function applyTwist(vertices, direction, val) {
-  const maxX = 0.6492353213974356;
-  const minX = -0.6492353213974356;
-  const maxY = 0.64795420379436;
-  const minY = -0.64795420379436;
+  const maxX = 1;
+  const minX = -1;
+  const maxY = 1;
+  const minY = -1;
   const maxZ = 1;
   const minZ = -1;
   if (direction == 'z') {
@@ -280,4 +318,30 @@ function applyShear(vertices, direction, val) {
       v.applyMatrix4(mat);
     });
   }
+}
+
+function normalizeGeometry(geometry) {
+  // compute maximums and minimums
+  let maxX = geometry.vertices[0].x;
+  let maxY = geometry.vertices[0].y;
+  let maxZ = geometry.vertices[0].z;
+  let minX = geometry.vertices[0].x;
+  let minY = geometry.vertices[0].y;
+  let minZ = geometry.vertices[0].z;
+  geometry.vertices.forEach(function(v) {
+    maxX = Math.max(maxX, v.x);
+    maxY = Math.max(maxY, v.y);
+    maxZ = Math.max(maxZ, v.z);
+    minX = Math.min(minX, v.x);
+    minY = Math.min(minY, v.y);
+    minZ = Math.min(minZ, v.z);
+  });
+
+  geometry.vertices.forEach(function(v) {
+    v.x = 2 * (v.x - minX) / (maxX - minX) + -1;
+    v.y = 2 * (v.y - minY) / (maxY - minY) + -1;
+    v.z = 2 * (v.z - minZ) / (maxZ - minZ) + -1;
+  });
+
+  return geometry;
 }
