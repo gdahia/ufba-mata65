@@ -19,8 +19,15 @@ function init() {
     bunnyGeometry = normalizeGeometry(bunnyGeometry);
   });
   loader.load('bulbasour.obj', function(loadedMesh) {
-    bulbasourGeometry = new THREE.Geometry().fromBufferGeometry(
-        loadedMesh.children[1].geometry);
+    bulbasourGeometry = new THREE.Geometry();
+    for (i = 0; i < loadedMesh.children.length; i++) {
+      tmp = new THREE.Geometry().fromBufferGeometry(
+          loadedMesh.children[i].geometry);
+      for (j = 0; j < tmp.vertices.length; j++)
+        bulbasourGeometry.vertices.push(tmp.vertices[j]);
+      for (j = 0; j < tmp.faces.length; j++)
+        bulbasourGeometry.faces.push(tmp.faces[j]);
+    }
     bulbasourGeometry = normalizeGeometry(bulbasourGeometry);
   });
 
