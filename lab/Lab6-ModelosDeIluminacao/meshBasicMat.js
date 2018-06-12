@@ -45,7 +45,7 @@ function render() {
 }
 
 function buildScene(loadedMesh) {
-  var material = new THREE.MeshBasicMaterial();
+  var material = new THREE.MeshStandardMaterial();
   material.color = new THREE.Color(1.0, 1.0, 0.0);
 
   loadedMesh.children.forEach(function(child) { child.material = material; });
@@ -57,10 +57,19 @@ function buildScene(loadedMesh) {
 
   // Adjust Camera Position and LookAt
   var maxCoord = Math.max(BBox.max.x, BBox.max.y, BBox.max.z);
+  var minCoord = Math.min(BBox.min.x, BBox.min.y, BBox.min.z);
 
   camera.position.x = camera.position.y = camera.position.z = maxCoord * 1.5;
   camera.far = new THREE.Vector3(maxCoord * 2.5, maxCoord * 2.5, maxCoord * 2.5)
                    .length();
+
+  // add light source
+  var light = new THREE.PointLight(0xFF0000);
+  var light2 = new THREE.PointLight(0x0000FF);
+  light.position.set(maxCoord, maxCoord, maxCoord);
+  light2.position.set(minCoord, minCoord, minCoord);
+  scene.add(light);
+  scene.add(light2);
 
   camera.lookAt(
       new THREE.Vector3(
