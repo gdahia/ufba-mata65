@@ -1,0 +1,59 @@
+<html>
+
+  <head>
+    <title>MATA65 - Computacao Grafica</title>
+    <h1>Gabriel Dahia Fernandes</h1>
+  </head>
+
+  <script type="text/javascript" src="../libs/three.js"></script>
+  <script type="text/javascript" src="06.js"></script>
+  <script type="text/javascript" src="../libs/examples/js/shaders/CopyShader.js"></script>
+  <script type="text/javascript" src="../libs/examples/js/postprocessing/EffectComposer.js"></script>
+  <script type="text/javascript" src="../libs/examples/js/postprocessing/ShaderPass.js"></script>
+  <script type="text/javascript" src="../libs/examples/js/postprocessing/MaskPass.js"></script>
+  <script type="text/javascript" src="../libs/examples/js/postprocessing/RenderPass.js"></script>
+		
+
+	<script id="base-vs" type="x-shader/x-vertex">		
+		varying vec2 vUv;			
+
+		void main(void) {
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
+	</script>
+
+  <script id="grayscale-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D tDiffuse;
+    varying vec2 vUv;
+
+    void main(void) {
+      vec4 texel = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(
+        texel.r*0.2126 + texel.g*0.7152 + texel.b*0.0722,
+        texel.r*0.2126 + texel.g*0.7152 + texel.b*0.0722,
+        texel.r*0.2126 + texel.g*0.7152 + texel.b*0.0722, texel.a);
+    }
+  </script>
+
+  <script id="binary-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D tDiffuse;
+    varying vec2 vUv;
+
+    void main(void) {
+      vec4 texel = texture2D(tDiffuse, vUv);
+      if (texel.r < 0.5)
+        gl_FragColor = vec4(0, 0, 0, texel.a);
+      else
+        gl_FragColor = vec4(1, 1, 1, texel.a);
+    }
+  </script>
+
+  <body onload="init();">
+    <div id="WebGL-output" ></div>
+  </body>
+</html>

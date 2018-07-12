@@ -1,0 +1,37 @@
+<html>
+
+  <head>
+    <title>MATA65 - Computacao Grafica</title>
+    <h1>Gabriel Dahia Fernandes</h1>
+  </head>
+
+  <script type="text/javascript" src="../libs/three.js"></script>
+  <script type="text/javascript" src="04.js"></script>
+
+	<script id="base-vs" type="x-shader/x-vertex">		
+		varying vec2 vUv;			
+
+		void main(void) {
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
+	</script>
+
+  <script id="blending-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D texture1;
+    uniform sampler2D texture2;
+    varying vec2 vUv;
+
+    void main(void) {
+      vec4 texel1 = texture2D(texture1, vUv);
+      vec4 texel2 = texture2D(texture2, vUv);
+      gl_FragColor = vec4(1.0 - texel1.rgb + texel2.rgb, 1.0);
+    }
+  </script>
+
+  <body onload="init();">
+    <div id="WebGL-output" ></div>
+  </body>
+</html>
