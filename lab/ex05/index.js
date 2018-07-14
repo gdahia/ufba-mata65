@@ -43,13 +43,14 @@ function init() {
       new THREE.MeshStandardMaterial({map: videoTexture, normalMap: normalMap});
   let dispMaterial = new THREE.MeshStandardMaterial(
       {map: videoTexture, displacementMap: dispMap, displacementBias: -0.5});
-  let alphaMaterial =
-      new THREE.MeshPhongMaterial({map: videoTexture, alphaMap: videoTexture});
+  let alphaMaterial = new THREE.MeshPhongMaterial(
+      {map: videoTexture, transparent: true, alphaMap: videoTexture});
   let bumpMaterial = new THREE.MeshStandardMaterial(
       {map: videoTexture, bumpMap: videoTexture});
   let specMaterial =
       new THREE.MeshPhongMaterial({color: "blue", specularMap: videoTexture});
-  let envMaterial = new THREE.MeshStandardMaterial({envMap: reflectionCube});
+  let envMaterial = new THREE.MeshStandardMaterial(
+      {envMap: reflectionCube, metalness: 0.95, roughness: 0.05});
 
   // create cube
   let geometry = new THREE.BoxGeometry(20, 20, 20, 40, 40, 40);
