@@ -37,6 +37,8 @@ function init() {
 
   // load env map
   let reflectionCube = new THREE.CubeTextureLoader().load(paths);
+  scene.autoUpdate = true;
+  scene.background = reflectionCube;
 
   // create material for each face
   let normalMaterial =
